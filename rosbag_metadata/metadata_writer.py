@@ -75,6 +75,7 @@ class BagMetadataUtility(object):
                 return None
         with open(filename,'w') as f:
             f.write(metadata_string)
+            f.close()
         return (filename, )
 
     def write_metadata(self, filename, metadata, overwrite_existing=False):
@@ -108,6 +109,7 @@ class BagMetadataUtility(object):
             else:
                 t = rospy.Time(bag.get_end_time())
             bag.write(self.default_topic, metadata_msg, t)
+            bag.close()
 
 
     def find_split_files(self, bagfile_name):
@@ -121,6 +123,7 @@ class BagMetadataUtility(object):
                 if msg_topic == self.default_topic:
                     found = True
                     break
+            bag.close()
             if found:
                 if use_yaml: # Try to parse data as yaml unless told not to
                     try:
@@ -153,6 +156,7 @@ class BagMetadataUtility(object):
         # try reading the file
         with open(filename, 'r') as f:
             data = f.read()
+            f.close()
             return (filename, yaml.load(data))
         return None
 
@@ -181,7 +185,9 @@ class BagMetadataUtility(object):
 
     def get_info(self, bagfile_name, freq=True):
         b = rosbag.Bag(bagfile_name, 'r',skip_index=not freq)
-        return yaml.load(b._get_yaml_info())
+        yaml_info = b._get_yaml_info()
+        b.close()
+        return yaml.load(yaml_info)
 
 
     def get_full_info(self, bagfile_name, freq=True):
